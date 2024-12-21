@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/student.dart';
+import '../models/department.dart';
+import 'package:uuid/uuid.dart';
 
 class NewStudent extends StatefulWidget {
   final Student? student;
   final Function(Student) onSave;
 
-  const NewStudent({Key? key, this.student, required this.onSave}) : super(key: key);
+  const NewStudent({super.key, this.student, required this.onSave});
 
   @override
   _NewStudentState createState() => _NewStudentState();
@@ -14,7 +16,7 @@ class NewStudent extends StatefulWidget {
 class _NewStudentState extends State<NewStudent> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  Department? _selectedDepartment;
+  String? _selectedDepartmentId;
   Gender? _selectedGender;
   int _grade = 0;
 
@@ -24,7 +26,7 @@ class _NewStudentState extends State<NewStudent> {
     if (widget.student != null) {
       _firstNameController.text = widget.student!.firstName;
       _lastNameController.text = widget.student!.lastName;
-      _selectedDepartment = widget.student!.department;
+      _selectedDepartmentId = widget.student!.departmentId;
       _selectedGender = widget.student!.gender;
       _grade = widget.student!.grade;
     }
@@ -40,15 +42,16 @@ class _NewStudentState extends State<NewStudent> {
   void _saveStudent() {
     if (_firstNameController.text.isEmpty ||
         _lastNameController.text.isEmpty ||
-        _selectedDepartment == null ||
+        _selectedDepartmentId == null ||
         _selectedGender == null) {
       return;
     }
 
     final newStudent = Student(
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-      department: _selectedDepartment!,
+      id: widget.student?.id ?? const Uuid().v4(),
+      firstName: _firstNameController.text.trim(),
+      lastName: _lastNameController.text.trim(),
+      departmentId: _selectedDepartmentId!,
       grade: _grade,
       gender: _selectedGender!,
     );
@@ -63,75 +66,96 @@ class _NewStudentState extends State<NewStudent> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(labelText: 'First Name'),
-              ),
-              TextField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(labelText: 'Last Name'),
-              ),
-              DropdownButton<Department>(
-                value: _selectedDepartment,
-                hint: const Text('Select Department'),
-                items: Department.values.map((dep) {
-                  return DropdownMenuItem(
-                    value: dep,
-                    child: Text(dep.toString().split('.').last.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedDepartment = value;
-                  });
-                },
-              ),
-              DropdownButton<Gender>(
-                value: _selectedGender,
-                hint: const Text('Select Gender'),
-                items: Gender.values.map((gender) {
-                  return DropdownMenuItem(
-                    value: gender,
-                    child: Text(gender.toString().split('.').last.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedGender = value;
-                  });
-                },
-              ),
-              Slider(
-                value: _grade.toDouble(),
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: 'Grade $_grade',
-                onChanged: (value) {
-                  setState(() {
-                    _grade = value.toInt();
-                  });
-                },
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _firstNameController,
+                  decoration: const InputDecoration(labelText: 'First Name'),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _lastNameController,
+                  decoration: const InputDecoration(labelText: 'Last Name'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedDepartmentId,
+                  decoration: const InputDecoration(
+                    labelText: 'Department',
+                    border: OutlineInputBorder(),
                   ),
-                  ElevatedButton(
-                    onPressed: _saveStudent,
-                    child: const Text('Save'),
+                  items: predefinedDepartments.map((dep) {
+                    return DropdownMenuItem(
+                      value: dep.id,
+                      child: Row(
+                        children: [
+                          Icon(dep.icon, size: 20),
+                          const SizedBox(width: 10),
+                          Text(dep.name),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _selectedDepartmentId = value),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<Gender>(
+                  value: _selectedGender,
+                  decoration: const InputDecoration(
+                    labelText: 'Gender',
+                    border: OutlineInputBorder(),
                   ),
-                ],
-              ),
-            ],
+                  items: Gender.values.map((gender) {
+                    return DropdownMenuItem(
+                      value: gender,
+                      child: Text(gender.toString().split('.').last.toUpperCase()),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _selectedGender = value),
+                ),
+                const SizedBox(height: 16),
+                Slider(
+                  value: _grade.toDouble(),
+                  min: 0,
+                  max: 100,
+                  divisions: 100,
+                  label: 'Grade: $_grade',
+                  onChanged: (value) => setState(() => _grade = value.toInt()),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.shade200,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _saveStudent,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal.shade300,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: Text(
+                        widget.student == null ? 'Save' : 'Update',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

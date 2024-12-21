@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/student.dart';
+import '../models/department.dart';
 
 class StudentItem extends StatelessWidget {
   final Student student;
 
-  const StudentItem({Key? key, required this.student}) : super(key: key);
+  const StudentItem({super.key, required this.student});
 
   Color _getBackgroundColorByGender(Gender gender) {
     return gender == Gender.male ? Colors.blue.shade50 : Colors.pink.shade50;
@@ -13,17 +14,31 @@ class StudentItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: _getBackgroundColorByGender(student.gender),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _getBackgroundColorByGender(student.gender),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 6,
+            offset: const Offset(2, 4),
+          ),
+        ],
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: Colors.grey.shade300,
-            radius: 25,
-            child: Text(
-              student.firstName[0].toUpperCase() + student.lastName[0].toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            backgroundColor: student.gender == Gender.male
+                ? Colors.blue.shade100
+                : Colors.pink.shade100,
+            radius: 28,
+            child: Icon(
+              student.department.icon,
+              color: Colors.white,
+              size: 30,
             ),
           ),
           const SizedBox(width: 16),
@@ -33,11 +48,18 @@ class StudentItem extends StatelessWidget {
               children: [
                 Text(
                   '${student.firstName} ${student.lastName}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  'Department: ${student.department.name.toUpperCase()}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                  student.department.name,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ],
             ),
@@ -46,13 +68,11 @@ class StudentItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                departmentIcons[student.department]!,
-                style: const TextStyle(fontSize: 24),
-              ),
-              const SizedBox(height: 4),
-              Text(
                 student.grade.toString(),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

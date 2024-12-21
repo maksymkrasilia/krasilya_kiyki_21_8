@@ -1,25 +1,24 @@
-enum Department { finance, law, it, medical }
+import 'department.dart';
+
 enum Gender { male, female }
 
 class Student {
+  final String id;
   final String firstName;
   final String lastName;
-  final Department department;
+  final String departmentId;
   final int grade;
   final Gender gender;
 
   Student({
+    required this.id,
     required this.firstName,
     required this.lastName,
-    required this.department,
+    required this.departmentId,
     required this.grade,
     required this.gender,
   });
-}
 
-final departmentIcons = {
-  Department.finance: '\u{1F4B8}', 
-  Department.law: '\u{2696}',
-  Department.it: '\u{1F4BB}', 
-  Department.medical: '\u{2695}',
-};
+  Department get department =>
+      predefinedDepartments.firstWhere((d) => d.id == departmentId);
+}
