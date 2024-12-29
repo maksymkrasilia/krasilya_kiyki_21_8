@@ -8,8 +8,12 @@ class DepartmentsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final students = ref.watch(studentsProvider);
-
+    final state = ref.watch(studentsProvider);
+    if(state.loadingFromServer) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -20,7 +24,7 @@ class DepartmentsView extends ConsumerWidget {
       itemCount: predefinedDepartments.length,
       itemBuilder: (context, index) {
         final department = predefinedDepartments[index];
-        final studentCount = students
+        final studentCount = state.currentList
             .where((student) => student.departmentId == department.id)
             .length;
 

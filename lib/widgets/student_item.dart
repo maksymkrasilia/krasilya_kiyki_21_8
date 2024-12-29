@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/student.dart';
-import '../models/department.dart';
 
 class StudentItem extends StatelessWidget {
   final Student student;
@@ -36,7 +35,7 @@ class StudentItem extends StatelessWidget {
                 : Colors.pink.shade100,
             radius: 28,
             child: Icon(
-              student.department.icon,
+              student.getDepartmentById(student.departmentId).icon,
               color: Colors.white,
               size: 30,
             ),
@@ -55,7 +54,7 @@ class StudentItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  student.department.name,
+                  student.getDepartmentById(student.departmentId).name,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey.shade600,

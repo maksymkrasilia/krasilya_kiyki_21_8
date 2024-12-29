@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/student.dart';
 import '../providers/students_provider.dart';
 import '../widgets/new_student.dart';
 
@@ -9,8 +8,26 @@ class StudentsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final students = ref.watch(studentsProvider);
+    final state = ref.watch(studentsProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (state.err != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              state.err!,
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
 
+    if(state.loadingFromServer) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -20,26 +37,22 @@ class StudentsView extends ConsumerWidget {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                builder: (_) => NewStudent(
-                  onSave: (newStudent) {
-                    ref.read(studentsProvider.notifier).addStudent(newStudent);
-                  },
-                ),
+                builder: (_) => const NewStudent(),
               );
             },
           ),
         ],
       ),
-      body: students.isEmpty
+      body: state.currentList.isEmpty
           ? const Center(child: Text('Empty'))
           : ListView.builder(
-              itemCount: students.length,
+              itemCount: state.currentList.length,
               itemBuilder: (context, index) {
-                final student = students[index];
-
+                final student = state.currentList[index];
+                final department = student.getDepartmentById(student.departmentId);
                 return ListTile(
                   title: Text('${student.firstName} ${student.lastName}'),
-                  subtitle: Text(student.department.name),
+                  subtitle: Text(department.name),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
@@ -54,25 +67,22 @@ class StudentsView extends ConsumerWidget {
                             onPressed: () {
                               globalRef
                                   .read(studentsProvider.notifier)
-                                  .undoRemove();
+                                  .undo();
                             },
                           ),
                         ),
-                      );
+                      ).closed.then((value) {
+                        if (value != SnackBarClosedReason.action) {
+                          globalRef.read(studentsProvider.notifier).undoFirebase();
+                        }
+                      });
                     },
                   ),
                   onTap: () {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
-                      builder: (_) => NewStudent(
-                        student: student,
-                        onSave: (updatedStudent) {
-                          ref
-                              .read(studentsProvider.notifier)
-                              .updateStudent(index, updatedStudent);
-                        },
-                      ),
+                      builder: (_) => NewStudent(selectedIndex: index,),
                     );
                   },
                 );
